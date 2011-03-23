@@ -31,6 +31,7 @@ import locale
 from optparse import OptionParser
 
 import YaFotkiLib
+import sys;reload(sys);sys.setdefaultencoding("utf-8")
 
 def getLastURLs(user, album, limit=1):
     try:

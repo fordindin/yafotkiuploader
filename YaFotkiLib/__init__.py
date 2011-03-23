@@ -22,7 +22,8 @@
 #
 
 import MultipartPostHandler, urllib2, cookielib
-import os, sys, re, hashlib
+import os, sys, re
+from hashlib import md5
 import urllib
 import logging
 import time
@@ -33,13 +34,13 @@ from StringIO import StringIO
 
 logging.basicConfig(level=logging.WARNING)
 
-VERSION = '0.2.6'
+VERSION = '0.2.7'
 
 try:
-    from pyexiv2 import Image as ImageExif
-except:
+    from pyexiv2 import ImageMetadata
+except ImportError:
     logging.getLogger('YaFotki.pre_init').warning('can\'t find python-pyexiv2 library, exif extraction will be disabled.')
-    ImageExif = None
+    ImageMetadata = None
 
 ALBUMS_URL= 'http://fotki.yandex.ru/users/%s/albums/'
 UPLOAD_URL = 'http://up.fotki.yandex.ru/upload'
@@ -101,9 +102,8 @@ class Uploader(object):
         title = filename
         description = ''
 
-        if ImageExif:
-            exif = ImageExif(img)
-            exif.readMetadata()
+        if ImageMetadata:
+            exif = ImageMetadata(img)
             try: tags = ','.join([tag.decode('utf8') for tag in exif['Iptc.Application2.Keywords']])
             except KeyError: pass
             try: title = exif['Iptc.Application2.ObjectName'].decode('utf8')
@@ -118,7 +118,7 @@ class Uploader(object):
 
         sid = str(int(time.time()))
         source.seek(0)
-        hash = hashlib.new('md5', source.read()).hexdigest()
+        hash = md5(source.read()).hexdigest()
 
         logger.debug('md5hash: %s, sid: %s, file-size: %s, piece-size: %s' % (hash, sid, file_size, piece_size))
         logger.debug('title: %s, description: %s tags: %s' % (title, description, tags))
